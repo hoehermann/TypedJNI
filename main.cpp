@@ -11,6 +11,8 @@ std::string GetTypeString(){
 template <>
 std::string GetTypeString<jstring>(){return "Ljava/lang/String;";};
 template <>
+std::string GetTypeString<jint>(){return "I";};
+template <>
 std::string GetTypeString<jlong>(){return "J";};
 template <>
 std::string GetTypeString<void>(){return "V";};
@@ -30,19 +32,33 @@ GetTypeString() {
 // based on for later: https://stackoverflow.com/questions/9065081/how-do-i-get-the-argument-types-of-a-function-pointer-in-a-variadic-template-cla
 template<typename T> 
 class TypedJNIMethod;
-template<typename R, typename ...Args> 
-class TypedJNIMethod<R(Args...)>
+template<typename ...Args> 
+class TypedJNIMethod<void(Args...)>
 {
     public:
-    static std::function<R(Args...)> get(JNIEnv *env, const jclass cls, const std::string name) {
-        const std::string signature = "("+GetTypeString<Args...>()+")"+GetTypeString<R>();
-        std::cerr << "Looking up static method '" << name << "' with signature '" << signature << "'." << std::endl;
+    static std::function<void(Args...)> get(JNIEnv *env, const jclass cls, const std::string name) {
+        const std::string signature = "("+GetTypeString<Args...>()+")"+GetTypeString<void>();
         jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
         if (mid == NULL) {
             throw std::runtime_error("Failed to find function '"+name+"'.");
         }
-        return [env, cls, mid](Args... args)-> R {
-            return env->CallStaticVoidMethod(cls, mid, args...);
+        return [env, cls, mid](Args... args) {
+            env->CallStaticVoidMethod(cls, mid, args...);
+        };
+    }
+};
+template<typename ...Args> 
+class TypedJNIMethod<jint(Args...)>
+{
+    public:
+    static std::function<jint(Args...)> get(JNIEnv *env, const jclass cls, const std::string name) {
+        const std::string signature = "("+GetTypeString<Args...>()+")"+GetTypeString<jint>();
+        jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
+        if (mid == NULL) {
+            throw std::runtime_error("Failed to find function '"+name+"'.");
+        }
+        return [env, cls, mid](Args... args)-> jint {
+            return env->CallStaticIntMethod(cls, mid, args...);
         };
     }
 };
@@ -66,7 +82,12 @@ class TypedJNIEnv : public JNIEnv {
     public:
     JavaVM *vm;
     JNIEnv *env;
-    TypedJNIEnv(JavaVM *vm, JNIEnv *env) : vm(vm), env(env) {}
+    TypedJNIEnv(JavaVMInitArgs vm_args) {
+        jint res = JNI_CreateJavaVM(&vm, (void **)&env, &vm_args);
+        if (res != JNI_OK) {
+            std::runtime_error("Failed to create Java VM.");
+        }
+    }
     virtual ~TypedJNIEnv() {
         vm->DestroyJavaVM();
     }
@@ -77,33 +98,15 @@ class TypedJNIEnv : public JNIEnv {
 
 int main(int argc, char **argv)
 {
-    /*
-    std::cerr << GetTypeString<void>() << std::endl;
-    std::cerr << GetTypeString<jlong>() << std::endl;
-    std::cerr << GetTypeString<jstring>() << std::endl;
-    std::cerr << GetTypeString<jlong, jstring>() << std::endl;
-    */
-    
-    JavaVM         *vm;
-    JNIEnv         *env;
     JavaVMInitArgs  vm_args;
-    jint            res;
-    jmethodID       mid;
-    jstring         jstr;
-    jobject         jobj;
-
     vm_args.version  = JNI_VERSION_1_8;
     vm_args.nOptions = 0;
-    res = JNI_CreateJavaVM(&vm, (void **)&env, &vm_args);
-    if (res != JNI_OK) {
-        printf("Failed to create Java VM.\n");
-        return 1;
-    }
-    TypedJNIEnv tenv(vm, env);
+    TypedJNIEnv tenv(vm_args);
     TypedJNIClass jJava = tenv.FindClass("Java");
     jJava.GetStaticMethod<void(void)>("printHelloWorld");
     jJava.GetStaticMethod<void(jlong)>("printLong")(1);
     jJava.GetStaticMethod<void(jlong,jlong)>("print2Long")(1,2);
+    std::cout << jJava.GetStaticMethod<jint(jint)>("increment")(1) << std::endl;
 
     return 0;
 }

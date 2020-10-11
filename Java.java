@@ -24,4 +24,9 @@ public class Java
     {
         System.out.println("Java says string: " + s);
     }
+    
+    public static int increment(int i)
+    {
+        return i+1;
+    }
 }
