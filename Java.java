@@ -29,4 +29,24 @@ public class Java
     {
         return i+1;
     }
+    
+    private int counter = 0;
+    
+    public Java() {
+        System.out.println("A new Java object was created out of the void.");
+    }
+    public Java(int i) {
+        this.counter = i;
+        System.out.println("A new " + this.counter + " long Java object was created.");
+    }
+    public Java(String s) {
+    }
+    
+    public void printCounter() {
+        System.out.println("Java says counter is " + this.counter + ".");
+    }
+    
+    public int incrementCounterBy(int i) {
+        return this.counter += i;
+    }
 }
