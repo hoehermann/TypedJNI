@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <functional>
 
+namespace TypedJNI {
 template <typename T>
 std::string GetTypeString(){
     static_assert(std::is_same<T,void>::value, "Cannot handle this type.");
@@ -19,7 +20,7 @@ std::string GetTypeString<void>(){return "V";};
 template<typename T, typename... Args>
 typename std::enable_if<sizeof...(Args) != 0, std::string>::type
 GetTypeString() {
-    std::cerr << "There are 1+" << sizeof...(Args) << " Args here. First one resolves to " << GetTypeString<T>() << "." << std::endl;
+    std::cerr << "There are 1 + " << sizeof...(Args) << " Args here. First one resolves to " << GetTypeString<T>() << "." << std::endl;
     return GetTypeString<T>() + GetTypeString<Args...>();
 };
 template<typename... Args>
@@ -29,19 +30,24 @@ GetTypeString() {
     return "";
 };
 
-// based on for later: https://stackoverflow.com/questions/9065081/how-do-i-get-the-argument-types-of-a-function-pointer-in-a-variadic-template-cla
+jmethodID GetStaticMethodID(JNIEnv *env, const jclass cls, const std::string name, const std::string & signature) {
+    jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
+    if (mid == NULL) {
+        throw std::runtime_error("Failed to find function '"+name+"'.");
+    }
+    return mid;
+}
+} // namespace TypedJNI
+
+// based on https://stackoverflow.com/questions/9065081/
 template<typename T> 
 class TypedJNIMethod;
 template<typename ...Args> 
 class TypedJNIMethod<void(Args...)>
 {
     public:
-    static std::function<void(Args...)> get(JNIEnv *env, const jclass cls, const std::string name) {
-        const std::string signature = "("+GetTypeString<Args...>()+")"+GetTypeString<void>();
-        jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
-        if (mid == NULL) {
-            throw std::runtime_error("Failed to find function '"+name+"'.");
-        }
+    static std::function<void(Args...)> get(JNIEnv *env, const jclass cls, const std::string & name) {
+        jmethodID mid = TypedJNI::GetStaticMethodID(env, cls, name, "("+TypedJNI::GetTypeString<Args...>()+")"+TypedJNI::GetTypeString<void>());
         return [env, cls, mid](Args... args) {
             env->CallStaticVoidMethod(cls, mid, args...);
         };
@@ -52,11 +58,7 @@ class TypedJNIMethod<jint(Args...)>
 {
     public:
     static std::function<jint(Args...)> get(JNIEnv *env, const jclass cls, const std::string name) {
-        const std::string signature = "("+GetTypeString<Args...>()+")"+GetTypeString<jint>();
-        jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
-        if (mid == NULL) {
-            throw std::runtime_error("Failed to find function '"+name+"'.");
-        }
+        jmethodID mid =  TypedJNI::GetStaticMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jint>());
         return [env, cls, mid](Args... args)-> jint {
             return env->CallStaticIntMethod(cls, mid, args...);
         };
@@ -106,7 +108,8 @@ int main(int argc, char **argv)
     jJava.GetStaticMethod<void(void)>("printHelloWorld");
     jJava.GetStaticMethod<void(jlong)>("printLong")(1);
     jJava.GetStaticMethod<void(jlong,jlong)>("print2Long")(1,2);
-    std::cout << jJava.GetStaticMethod<jint(jint)>("increment")(1) << std::endl;
+    const long i = 1;
+    std::cout << i << " incremented by Java is " << jJava.GetStaticMethod<jint(jint)>("increment")(i) << std::endl;
 
     return 0;
 }
