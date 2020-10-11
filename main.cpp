@@ -29,11 +29,30 @@ GetTypeString() {
 
 // interesting for later: https://stackoverflow.com/questions/9065081/how-do-i-get-the-argument-types-of-a-function-pointer-in-a-variadic-template-cla
 
+template<typename T> 
+class TypedJNIMethod;
+template<typename R, typename ...Args> 
+class TypedJNIMethod<R(Args...)>
+{
+    public:
+    static std::function<R(Args...)> get(JNIEnv *env, jclass cls, const std::string name) {
+        const std::string signature = "("+GetTypeString<Args...>()+")V";
+        std::cerr << "Looking up static method '" << name << "' with signature '" << signature << "'." << std::endl;
+        jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
+        if (mid == NULL) {
+            throw std::runtime_error("Failed to find function '"+name+"'.");
+        }
+        return [env, cls, mid](Args... args)->R {
+            return env->CallStaticVoidMethod(cls, mid, args...);
+        };
+    }
+};
+
 class TypedJNIClass {
     private:
     JNIEnv *env;
-    const jclass cls;
     public:
+    const jclass cls;
     TypedJNIClass(JNIEnv *env, jclass cls) : env(env), cls(cls) {
         if (cls == NULL) {
             std::runtime_error("Failed to find class.");
@@ -91,9 +110,12 @@ int main(int argc, char **argv)
     }
     TypedJNIEnv tenv(vm, env);
     TypedJNIClass jJava = tenv.FindClass("Java");
+    TypedJNIMethod<void(void)>::get(env, jJava.cls, "printHelloWorld")();
+    TypedJNIMethod<void(jlong)>::get(env, jJava.cls, "printLong")(1);
+    TypedJNIMethod<void(jlong,jlong)>::get(env, jJava.cls, "print2Long")(1,2);
     //jJava.GetStaticMethod<void>("printHelloWorld");
-    jJava.GetStaticMethod<jlong>("printLong")(1);
-    jJava.GetStaticMethod<jlong,jlong>("print2Long")(1,2);
+    //jJava.GetStaticMethod<jlong>("printLong")(1);
+    //jJava.GetStaticMethod<jlong,jlong>("print2Long")(1,2);
 
     return 0;
 }
