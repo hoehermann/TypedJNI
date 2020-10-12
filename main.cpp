@@ -174,14 +174,19 @@ int main(int argc, char **argv)
     vm_args.version  = JNI_VERSION_1_8;
     TypedJNIEnv tenv(vm_args);
     TypedJNIClass javacls = tenv.FindClass("Java");
-    javacls.GetStaticMethod<void(void)>("printHelloWorld");
+    javacls.GetStaticMethod<void()>("printHelloWorld");
     javacls.GetStaticMethod<void(jlong)>("printLong")(1);
     javacls.GetStaticMethod<void(jlong,jlong)>("print2Long")(1,2);
-    const long i = 1;
-    std::cout << i << " incremented by Java is " << javacls.GetStaticMethod<jint(jint)>("increment")(i) << std::endl;
+    {
+        const long l = 1;
+        std::cout << l << " incremented by Java is " << javacls.GetStaticMethod<jint(jint)>("increment")(l) << std::endl;
+    }
     
-    TypedJNIObject javaobj = javacls.GetConstructor<jint>()(1);
-    javaobj.GetMethod<jint(jint)>("incrementCounterBy")(2);
+    TypedJNIObject javaobj = javacls.GetConstructor<>()();
+    {
+        jint i = javaobj.GetMethod<jint(jint)>("incrementCounterBy")(2);
+        std::cout << "After incrementing, counter is " << i << "." << std::endl;
+    }
     javaobj.GetMethod<void(void)>("printCounter")();
 
     return 0;
