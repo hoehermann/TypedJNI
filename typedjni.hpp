@@ -11,6 +11,14 @@ std::string GetTypeString(){
     static_assert(std::is_same<T,void>::value, "Cannot handle this type.");
     return "This actually never gets compiled.";
 };
+template <>
+std::string GetTypeString<jstring>();
+template <>
+std::string GetTypeString<jint>();
+template <>
+std::string GetTypeString<jlong>();
+template <>
+std::string GetTypeString<void>();
 template<typename T, typename... Args>
 typename std::enable_if<sizeof...(Args) != 0, std::string>::type
 GetTypeString() {
@@ -125,6 +133,8 @@ class TypedJNIEnv {
     public:
     JavaVM *vm;
     JNIEnv *env;
+    TypedJNIEnv(const TypedJNIEnv&) = delete;
+    TypedJNIEnv& operator=(const TypedJNIEnv&) = delete;
     TypedJNIEnv(JavaVMInitArgs vm_args);
     virtual ~TypedJNIEnv();
     TypedJNIClass FindClass(std::string name);

@@ -37,9 +37,11 @@ public class Java
     }
     public Java(int i) {
         this.counter = i;
-        System.out.println("A new " + this.counter + " long Java object was created.");
+        System.out.println("A new " + this.counter + " int Java object was created.");
     }
     public Java(String s) {
+        this.counter = Integer.parseInt(s);
+        System.out.println("A new " + this.counter + " string Java object was created.");
     }
     
     public void printCounter() {

@@ -29,20 +29,22 @@ TypedJNIObject::TypedJNIObject(JNIEnv *env, jclass cls, jobject obj) : env(env),
 
 
 TypedJNIClass::TypedJNIClass(JNIEnv *env, jclass cls) : env(env), cls(cls) {
-    if (cls == NULL) {
-        std::runtime_error("Failed to find class.");
-    }
-}
+    //assert(cls);
+};
 
 TypedJNIEnv::TypedJNIEnv(JavaVMInitArgs vm_args) {
     jint res = JNI_CreateJavaVM(&vm, (void **)&env, &vm_args);
     if (res != JNI_OK) {
-        std::runtime_error("Failed to create Java VM.");
+        throw std::runtime_error(std::string("Failed to create Java VM (error ")+std::to_string(res)+").");
     }
 }
 TypedJNIEnv::~TypedJNIEnv() {
     vm->DestroyJavaVM();
 }
 TypedJNIClass TypedJNIEnv::FindClass(std::string name) {
-    return TypedJNIClass(env, env->FindClass(name.c_str()));
+    jclass cls = env->FindClass(name.c_str());
+    if (cls == NULL) {
+        throw std::runtime_error("Failed to find class '"+name+"'.");
+    }
+    return TypedJNIClass(env, cls);
 }

@@ -7,8 +7,11 @@ all: cppjava Java.class
 Java.class: Java.java
 	javac Java.java
 
-cppjava: main.cpp
-	g++ -o cppjava main.cpp -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -L$(JDK_HOME)/lib/server -ljvm
+typedjni.o: typedjni.cpp
+	g++ -c typedjni.cpp -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux
+
+cppjava: main.cpp typedjni.o
+	g++ -o cppjava main.cpp typedjni.o -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -L$(JDK_HOME)/lib/server -ljvm
 
 run_java: Java.class
 	java -classpath . Java
