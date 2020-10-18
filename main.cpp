@@ -3,15 +3,16 @@
 int main(int argc, char **argv)
 {
     JavaVMInitArgs  vm_args;
-    std::vector<JavaVMOption> options(3);
-    options.at(0).optionString = const_cast<char*>("-verbose:gc");
-    options.at(1).optionString = const_cast<char*>("-XX:+PrintGCTimeStamps");
-    options.at(2).optionString = const_cast<char*>("-XX:+PrintGCDetails");
+    JavaVMOption jvmo;
+    std::vector<JavaVMOption> options;
+    //jvmo.optionString = const_cast<char*>("-verbose:gc"); options.push_back(jvmo);
+    //jvmo.optionString = const_cast<char*>("-XX:+PrintGCTimeStamps"); options.push_back(jvmo);
+    //jvmo.optionString = const_cast<char*>("-XX:+PrintGCDetails"); options.push_back(jvmo);
     vm_args.options = options.data();
     vm_args.nOptions = options.size();
     vm_args.version  = JNI_VERSION_1_8;
     TypedJNIEnv tenv(vm_args);
-    TypedJNIClass javacls = tenv.FindClass("Java");
+    TypedJNIClass javacls = tenv.find_class("Java");
     javacls.GetStaticMethod<void()>("printHelloWorld");
     javacls.GetStaticMethod<void(jlong)>("printLong")(1);
     javacls.GetStaticMethod<void(jlong,jlong)>("print2Long")(1,2);
@@ -20,8 +21,7 @@ int main(int argc, char **argv)
         std::cout << l << " incremented by Java is " << javacls.GetStaticMethod<jint(jint)>("increment")(l) << std::endl;
     }
     
-    jstring jstr = tenv.env->NewStringUTF("mooo");
-    TypedJNIObject javaobj = javacls.GetConstructor<jstring>()(jstr);
+    TypedJNIObject javaobj = javacls.GetConstructor<jstring>()(tenv.make_jstring("5"));
     {
         jint i = javaobj.GetMethod<jint(jint)>("incrementCounterBy")(2);
         std::cout << "After incrementing, counter is " << i << "." << std::endl;

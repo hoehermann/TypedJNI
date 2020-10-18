@@ -24,6 +24,19 @@ jmethodID TypedJNI::GetMethodID(JNIEnv *env, const jclass cls, const std::string
     return mid;
 }
 
+TypedJNIString::TypedJNIString(JNIEnv *env, const std::string & str) : env(env) {
+    jstr = env->NewStringUTF(str.c_str());
+    if (jstr == NULL) {
+        throw std::runtime_error("NewStringUTF failed for string '"+str+"'.");
+    }
+}
+TypedJNIString::~TypedJNIString() {
+    // clean up as recommended by https://stackoverflow.com/questions/6238785/
+    env->DeleteLocalRef(jstr);
+}
+TypedJNIString::operator jstring() const {
+    return jstr;
+}
 
 TypedJNIObject::TypedJNIObject(JNIEnv *env, jclass cls, jobject obj) : env(env), cls(cls), obj(obj) {};
 
@@ -39,12 +52,17 @@ TypedJNIEnv::TypedJNIEnv(JavaVMInitArgs vm_args) {
     }
 }
 TypedJNIEnv::~TypedJNIEnv() {
+    env = nullptr;
     vm->DestroyJavaVM();
+    vm = nullptr;
 }
-TypedJNIClass TypedJNIEnv::FindClass(std::string name) {
+TypedJNIClass TypedJNIEnv::find_class(std::string name) {
     jclass cls = env->FindClass(name.c_str());
     if (cls == NULL) {
         throw std::runtime_error("Failed to find class '"+name+"'.");
     }
     return TypedJNIClass(env, cls);
+}
+TypedJNIString TypedJNIEnv::make_jstring(const std::string & str) {
+    return TypedJNIString(env, str);
 }

@@ -62,7 +62,6 @@ class TypedJNIStaticMethod<jint(Args...)>
     }
 };
 
-
 template<typename T> 
 class TypedJNIMethod;
 template<typename ...Args> 
@@ -129,6 +128,17 @@ class TypedJNIClass {
         return TypedJNIConstructor<Args...>::get(env, cls);
     }
 };
+
+class TypedJNIString {
+    private:
+    jstring jstr;
+    JNIEnv *env;
+    public:
+    TypedJNIString(JNIEnv *env, const std::string & str);
+    virtual ~TypedJNIString();
+    operator jstring() const;
+};
+
 class TypedJNIEnv {
     public:
     JavaVM *vm;
@@ -137,5 +147,6 @@ class TypedJNIEnv {
     TypedJNIEnv& operator=(const TypedJNIEnv&) = delete;
     TypedJNIEnv(JavaVMInitArgs vm_args);
     virtual ~TypedJNIEnv();
-    TypedJNIClass FindClass(std::string name);
+    TypedJNIClass find_class(std::string name);
+    TypedJNIString make_jstring(const std::string & str);
 };
