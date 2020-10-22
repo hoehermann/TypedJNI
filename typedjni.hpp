@@ -1,3 +1,5 @@
+#pragma once
+
 #include <jni.h>
 #include <string>
 #include <iostream>
@@ -13,6 +15,8 @@ std::string GetTypeString(){
 };
 template <>
 std::string GetTypeString<jstring>();
+template <>
+std::string GetTypeString<jboolean>();
 template <>
 std::string GetTypeString<jint>();
 template <>
@@ -86,6 +90,33 @@ class TypedJNIMethod<jint(Args...)>
         };
     }
 };
+template<typename ...Args> 
+class TypedJNIMethod<jobject(Args...)>
+{
+    public:
+    static std::function<jobject(Args...)> get(JNIEnv *env, const jclass cls, const jobject obj, const std::string name) {
+        const jmethodID mid =  TypedJNI::GetMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jobject>());
+        return [env, obj, mid](Args... args)-> jobject {
+            return env->CallObjectMethod(obj, mid, args...);
+        };
+    }
+};
+/*
+ * Handle jstring for convenience. Only types officially mentioned at 
+ * https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html#type_signatures
+ * are considered here. Everything else is just jobject.
+ */
+template<typename ...Args> 
+class TypedJNIMethod<jstring(Args...)>
+{
+    public:
+    static std::function<jstring(Args...)> get(JNIEnv *env, const jclass cls, const jobject obj, const std::string name) {
+        const jmethodID mid =  TypedJNI::GetMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jstring>());
+        return [env, obj, mid](Args... args)-> jstring {
+            return static_cast<jstring>(env->CallObjectMethod(obj, mid, args...));
+        };
+    }
+};
 
 class TypedJNIObject {
     private:
@@ -106,6 +137,7 @@ class TypedJNIConstructor
 {
     public:
     static std::function<TypedJNIObject(Args...)> get(JNIEnv *env, const jclass cls) {
+        // yes indeed GetMethodID as illustrated at https://stackoverflow.com/questions/7260376/
         const jmethodID mid = TypedJNI::GetMethodID(env, cls, "<init>", "("+TypedJNI::GetTypeString<Args...>()+")"+TypedJNI::GetTypeString<void>());
         return [env, cls, mid](Args... args) -> TypedJNIObject {
             return TypedJNIObject(env, cls, env->NewObject(cls, mid, args...));
