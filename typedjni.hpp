@@ -129,7 +129,7 @@ class TypedJNIObject {
     std::function<Args...> GetMethod(const std::string name) {
         return TypedJNIMethod<Args...>::get(env, cls, obj, name);
     }
-    // TODO: clean up object / reference count on destruction
+    virtual ~TypedJNIObject();
 };
 
 template<typename ...Args> 

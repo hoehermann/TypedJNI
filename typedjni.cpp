@@ -42,6 +42,9 @@ TypedJNIString::operator jstring() const {
 
 TypedJNIObject::TypedJNIObject(JNIEnv *env, jclass cls, jobject obj) : env(env), cls(cls), obj(obj) {};
 
+TypedJNIObject::~TypedJNIObject() {
+    env->DeleteLocalRef(obj);
+};
 
 TypedJNIClass::TypedJNIClass(JNIEnv *env, jclass cls) : env(env), cls(cls) {
     //assert(cls);
