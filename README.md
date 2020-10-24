@@ -36,7 +36,7 @@ you can now write
         TypedJNIClass psclass = tenv.find_class("SomeClass").
             GetConstructor<jlong,jstring>()(
                 somelong,  // implicit conversion where possible
-                tenv.make_jstring(somestring) // explicit conversion with automated clean-up
+                *tenv.make_jstring(somestring) // explicit conversion with automated clean-up
             ).
             GetMethod<void()>("someMethod")();
     } catch (std::exception & e) {

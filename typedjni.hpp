@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <functional>
 #include <vector>
+#include <memory>
 
 namespace TypedJNI {
 template <typename T>
@@ -124,6 +125,8 @@ class TypedJNIObject {
     jclass cls;
     jobject obj;
     public:
+    TypedJNIObject(const TypedJNIObject&) = delete;
+    TypedJNIObject& operator=(const TypedJNIObject&) = delete;
     TypedJNIObject(JNIEnv *env, jclass cls, jobject obj);
     template<typename... Args>
     std::function<Args...> GetMethod(const std::string name) {
@@ -136,11 +139,11 @@ template<typename ...Args>
 class TypedJNIConstructor
 {
     public:
-    static std::function<TypedJNIObject(Args...)> get(JNIEnv *env, const jclass cls) {
+    static std::function<std::shared_ptr<TypedJNIObject>(Args...)> get(JNIEnv *env, const jclass cls) {
         // yes indeed GetMethodID as illustrated at https://stackoverflow.com/questions/7260376/
         const jmethodID mid = TypedJNI::GetMethodID(env, cls, "<init>", "("+TypedJNI::GetTypeString<Args...>()+")"+TypedJNI::GetTypeString<void>());
-        return [env, cls, mid](Args... args) -> TypedJNIObject {
-            return TypedJNIObject(env, cls, env->NewObject(cls, mid, args...));
+        return [env, cls, mid](Args... args) -> std::shared_ptr<TypedJNIObject> {
+            return std::make_shared<TypedJNIObject>(env, cls, env->NewObject(cls, mid, args...));
         };
     }
 };
@@ -156,7 +159,7 @@ class TypedJNIClass {
         return TypedJNIStaticMethod<Args...>::get(env, cls, name);
     }
     template<typename... Args>
-    std::function<TypedJNIObject(Args...)> GetConstructor() {
+    std::function<std::shared_ptr<TypedJNIObject>(Args...)> GetConstructor() {
         return TypedJNIConstructor<Args...>::get(env, cls);
     }
 };
@@ -166,6 +169,8 @@ class TypedJNIString {
     jstring jstr;
     JNIEnv *env;
     public:
+    TypedJNIString(const TypedJNIString&) = delete;
+    TypedJNIString& operator=(const TypedJNIString&) = delete;
     TypedJNIString(JNIEnv *env, const std::string & str);
     virtual ~TypedJNIString();
     operator jstring() const;
@@ -180,5 +185,5 @@ class TypedJNIEnv {
     TypedJNIEnv(JavaVMInitArgs vm_args);
     virtual ~TypedJNIEnv();
     TypedJNIClass find_class(std::string name);
-    TypedJNIString make_jstring(const std::string & str);
+    std::shared_ptr<TypedJNIString> make_jstring(const std::string & str);
 };

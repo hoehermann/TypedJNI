@@ -21,12 +21,12 @@ int main(int argc, char **argv)
         std::cout << l << " incremented by Java is " << javacls.GetStaticMethod<jint(jint)>("increment")(l) << std::endl;
     }
     
-    TypedJNIObject javaobj = javacls.GetConstructor<jstring>()(tenv.make_jstring("5"));
+    std::shared_ptr<TypedJNIObject> javaobj = javacls.GetConstructor<jstring>()(*tenv.make_jstring("5"));
     {
-        jint i = javaobj.GetMethod<jint(jint)>("incrementCounterBy")(2);
+        jint i = javaobj->GetMethod<jint(jint)>("incrementCounterBy")(2);
         std::cout << "After incrementing, counter is " << i << "." << std::endl;
     }
-    javaobj.GetMethod<void(void)>("printCounter")();
+    javaobj->GetMethod<void(void)>("printCounter")();
 
     return 0;
 }
