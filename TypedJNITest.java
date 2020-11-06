@@ -1,4 +1,4 @@
-public class Java 
+public class TypedJNITest 
 {
     public static void main (String[] args)
     {
@@ -32,14 +32,14 @@ public class Java
     
     private int counter = 0;
     
-    public Java() {
+    public TypedJNITest() {
         System.out.println("A new Java object was created out of the void.");
     }
-    public Java(int i) {
+    public TypedJNITest(int i) {
         this.counter = i;
         System.out.println("A new " + this.counter + " int Java object was created.");
     }
-    public Java(String s) {
+    public TypedJNITest(String s) {
         this.counter = Integer.parseInt(s);
         System.out.println("A new " + this.counter + " string Java object was created.");
     }

@@ -12,7 +12,7 @@ int main(int argc, char **argv)
     vm_args.nOptions = options.size();
     vm_args.version  = JNI_VERSION_1_8;
     TypedJNIEnv tenv(vm_args);
-    TypedJNIClass javacls = tenv.find_class("Java");
+    TypedJNIClass javacls = tenv.find_class("TypedJNITest");
     javacls.GetStaticMethod<void()>("printHelloWorld");
     javacls.GetStaticMethod<void(jlong)>("printLong")(1);
     javacls.GetStaticMethod<void(jlong,jlong)>("print2Long")(1,2);

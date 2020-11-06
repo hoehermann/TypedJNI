@@ -1,23 +1,23 @@
 JDK_HOME?=/usr/lib/jvm/java-11-openjdk-amd64
 
-.phony: run_java run_cppjava
+.phony: run_java run clean
 
-all: clean cppjava Java.class
+all: typedjnitest TypedJNITest.class
 
-Java.class: Java.java
-	javac Java.java
+TypedJNITest.class: TypedJNITest.java
+	javac TypedJNITest.java
 
 typedjni.o: typedjni.cpp
 	g++ -c typedjni.cpp -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux
 
-cppjava: main.cpp typedjni.o
-	g++ -o cppjava -g -ggdb main.cpp typedjni.o -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -L$(JDK_HOME)/lib/server -ljvm
+typedjnitest: test.cpp typedjni.o
+	g++ -o typedjnitest -g -ggdb test.cpp typedjni.o -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -L$(JDK_HOME)/lib/server -ljvm
 
-run_java: Java.class
-	java -classpath . Java
+run_java: TypedJNITest.class
+	java -classpath . TypedJNITest
 
-run: cppjava Java.class
-	env LD_LIBRARY_PATH=$(JDK_HOME)/lib/server ./cppjava
+run: typedjnitest TypedJNITest.class
+	env LD_LIBRARY_PATH=$(JDK_HOME)/lib/server ./typedjnitest
 
 clean:
-	rm -f Java.class typedjni.o
+	rm -f TypedJNITest.class typedjni.o
