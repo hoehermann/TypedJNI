@@ -2,7 +2,6 @@
 
 #include <jni.h>
 #include <string>
-#include <iostream>
 #include <stdexcept>
 #include <functional>
 #include <vector>
@@ -27,13 +26,11 @@ std::string GetTypeString<void>();
 template<typename T, typename... Args>
 typename std::enable_if<sizeof...(Args) != 0, std::string>::type
 GetTypeString() {
-    std::cerr << "There are 1 + " << sizeof...(Args) << " Args here. First one resolves to " << GetTypeString<T>() << "." << std::endl;
     return GetTypeString<T>() + GetTypeString<Args...>();
 };
 template<typename... Args>
 typename std::enable_if<sizeof...(Args) == 0, std::string>::type
 GetTypeString() {
-    std::cerr << "There are no Args here. Returning empty string." << std::endl;
     return "";
 };
 
