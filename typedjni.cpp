@@ -50,7 +50,7 @@ TypedJNIClass::TypedJNIClass(JNIEnv *env, jclass cls) : env(env), cls(cls) {
     //assert(cls);
 };
 
-TypedJNIEnv::TypedJNIEnv(JavaVMInitArgs vm_args) : vm(nullptr), env(nullptr) {
+TypedJNIEnv::TypedJNIEnv(JavaVMInitArgs vm_args) {
     jint res = JNI_CreateJavaVM(&vm, (void **)&env, &vm_args);
     if (res != JNI_OK) {
         throw std::runtime_error(std::string("Failed to create Java VM (error ")+std::to_string(res)+").");

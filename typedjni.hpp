@@ -121,9 +121,9 @@ class TypedJNIMethod<jstring(Args...)>
 
 class TypedJNIObject {
     private:
-    JNIEnv *env;
-    jclass cls;
-    jobject obj;
+    JNIEnv *env = nullptr;
+    jclass cls = nullptr;
+    jobject obj = nullptr;
     public:
     TypedJNIObject(const TypedJNIObject&) = delete;
     TypedJNIObject& operator=(const TypedJNIObject&) = delete;
@@ -150,9 +150,9 @@ class TypedJNIConstructor
 
 class TypedJNIClass {
     private:
-    JNIEnv *env;
+    JNIEnv *env = nullptr;
     public:
-    const jclass cls;
+    const jclass cls = nullptr;
     TypedJNIClass(JNIEnv *env, jclass cls);
     template<typename... Args>
     std::function<Args...> GetStaticMethod(const std::string name) {
@@ -166,8 +166,8 @@ class TypedJNIClass {
 
 class TypedJNIString {
     private:
-    jstring jstr;
-    JNIEnv *env;
+    jstring jstr = nullptr;
+    JNIEnv *env = nullptr;
     public:
     TypedJNIString(const TypedJNIString&) = delete;
     TypedJNIString& operator=(const TypedJNIString&) = delete;
@@ -178,8 +178,8 @@ class TypedJNIString {
 
 class TypedJNIEnv {
     public:
-    JavaVM *vm;
-    JNIEnv *env;
+    JavaVM *vm = nullptr;
+    JNIEnv *env = nullptr;
     TypedJNIEnv(const TypedJNIEnv&) = delete;
     TypedJNIEnv& operator=(const TypedJNIEnv&) = delete;
     TypedJNIEnv(JavaVMInitArgs vm_args);
