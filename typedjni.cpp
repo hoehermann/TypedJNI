@@ -31,20 +31,21 @@ TypedJNIString::TypedJNIString(JNIEnv *env, const std::string & str) {
     if (jstr == NULL) {
         throw std::runtime_error("NewStringUTF failed for string '"+str+"'.");
     }
-    jstrptr = std::shared_ptr<_jstring>(jstr, [env](jstring p){env->DeleteLocalRef(p);});
+    jstrptr = std::shared_ptr<_jstring>(jstr, [env](jstring s){env->DeleteLocalRef(s);});
 }
 TypedJNIString::operator jstring() const {
     return jstrptr.get();
 }
 
-TypedJNIObject::TypedJNIObject(JNIEnv *env, jclass cls, jobject obj) : env(env), cls(cls), obj(obj) {};
-
-TypedJNIObject::~TypedJNIObject() {
-    env->DeleteLocalRef(obj);
-};
+TypedJNIObject::TypedJNIObject(JNIEnv *env, jclass cls, jobject obj) : 
+    env(env), 
+    cls(cls),
+    obj(std::shared_ptr<_jobject>(obj, [env](jobject o){env->DeleteLocalRef(o);})) {};
 
 TypedJNIClass::TypedJNIClass(JNIEnv *env, jclass cls) : env(env), cls(cls) {
-    //assert(cls);
+    if (!cls) {
+        throw std::runtime_error("Tried to create TypedJNIClass from nullptr.");
+    }
 };
 
 TypedJNIEnv::TypedJNIEnv(JavaVMInitArgs vm_args) {

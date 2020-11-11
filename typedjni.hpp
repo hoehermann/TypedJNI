@@ -100,9 +100,10 @@ class TypedJNIMethod<jobject(Args...)>
     }
 };
 /*
- * Handle jstring for convenience. Only types officially mentioned at 
+ * Handle jstring for convenience. Everything else is just jobject. 
+ * Might be extended some day. But only types officially mentioned at 
  * https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html#type_signatures
- * are considered here. Everything else is just jobject.
+ * can be considered here.
  */
 template<typename ...Args> 
 class TypedJNIMethod<jstring(Args...)>
@@ -120,27 +121,24 @@ class TypedJNIObject {
     private:
     JNIEnv *env = nullptr;
     jclass cls = nullptr;
-    jobject obj = nullptr;
+    std::shared_ptr<_jobject> obj = nullptr;
     public:
-    TypedJNIObject(const TypedJNIObject&) = delete;
-    TypedJNIObject& operator=(const TypedJNIObject&) = delete;
     TypedJNIObject(JNIEnv *env, jclass cls, jobject obj);
     template<typename... Args>
     std::function<Args...> GetMethod(const std::string name) {
-        return TypedJNIMethod<Args...>::get(env, cls, obj, name);
+        return TypedJNIMethod<Args...>::get(env, cls, obj.get(), name);
     }
-    virtual ~TypedJNIObject();
 };
 
 template<typename ...Args> 
 class TypedJNIConstructor
 {
     public:
-    static std::function<std::shared_ptr<TypedJNIObject>(Args...)> get(JNIEnv *env, const jclass cls) {
+    static std::function<TypedJNIObject(Args...)> get(JNIEnv *env, const jclass cls) {
         // yes indeed GetMethodID as illustrated at https://stackoverflow.com/questions/7260376/
         const jmethodID mid = TypedJNI::GetMethodID(env, cls, "<init>", "("+TypedJNI::GetTypeString<Args...>()+")"+TypedJNI::GetTypeString<void>());
-        return [env, cls, mid](Args... args) -> std::shared_ptr<TypedJNIObject> {
-            return std::make_shared<TypedJNIObject>(env, cls, env->NewObject(cls, mid, args...));
+        return [env, cls, mid](Args... args) -> TypedJNIObject {
+            return TypedJNIObject(env, cls, env->NewObject(cls, mid, args...));
         };
     }
 };
@@ -156,7 +154,7 @@ class TypedJNIClass {
         return TypedJNIStaticMethod<Args...>::get(env, cls, name);
     }
     template<typename... Args>
-    std::function<std::shared_ptr<TypedJNIObject>(Args...)> GetConstructor() {
+    std::function<TypedJNIObject(Args...)> GetConstructor() {
         return TypedJNIConstructor<Args...>::get(env, cls);
     }
 };
