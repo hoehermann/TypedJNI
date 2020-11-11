@@ -25,15 +25,15 @@ int main(int argc, char **argv)
         std::cout << l << " incremented by Java is " << javacls.GetStaticMethod<jint(jint)>("increment")(l) << std::endl;
     }
     
-    std::shared_ptr<TypedJNIObject> javaobj = javacls.GetConstructor<jstring>()(*tenv.make_jstring("5"));
+    std::shared_ptr<TypedJNIObject> javaobj = javacls.GetConstructor<jstring>()(tenv.make_jstring("5"));
     {
         jint i = javaobj->GetMethod<jint(jint)>("incrementCounterBy")(2);
         std::cout << "After incrementing, counter is " << i << "." << std::endl;
     }
     javaobj->GetMethod<void(void)>("printCounter")();
     
-    auto s = tenv.make_jstring(std::string("Some words"));
-    javaobj->GetMethod<void(jstring, jint)>("printInBackground")(*s, 10);
+    TypedJNIString s = tenv.make_jstring(std::string("Some words"));
+    javaobj->GetMethod<void(jstring, jint)>("printInBackground")(s, 10);
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     return 0;

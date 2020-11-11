@@ -163,13 +163,9 @@ class TypedJNIClass {
 
 class TypedJNIString {
     private:
-    jstring jstr = nullptr;
-    JNIEnv *env = nullptr;
+    std::shared_ptr<_jstring> jstrptr = nullptr;
     public:
-    TypedJNIString(const TypedJNIString&) = delete;
-    TypedJNIString& operator=(const TypedJNIString&) = delete;
     TypedJNIString(JNIEnv *env, const std::string & str);
-    virtual ~TypedJNIString();
     operator jstring() const;
 };
 
@@ -182,5 +178,5 @@ class TypedJNIEnv {
     TypedJNIEnv(JavaVMInitArgs vm_args);
     virtual ~TypedJNIEnv();
     TypedJNIClass find_class(std::string name);
-    std::shared_ptr<TypedJNIString> make_jstring(const std::string & str);
+    TypedJNIString make_jstring(const std::string & str);
 };
