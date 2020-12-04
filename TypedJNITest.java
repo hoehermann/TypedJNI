@@ -69,13 +69,13 @@ public class TypedJNITest implements Runnable
     
     @Override
     public void run() {
-        this.counter--;
         while (this.counter != 0) {
+            this.counter--;
             System.out.println("Java prints in background: »" + this.string + "«, " + this.counter + " times remaining.");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                //
+                // ignore. will not happen during this test
             }
         }
     }

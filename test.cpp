@@ -1,6 +1,7 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <vector>
 
 #include "typedjni.hpp"
 

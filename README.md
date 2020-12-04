@@ -26,17 +26,17 @@ Instead of the lengthy and error-prone
         return; // handle error
     }
     (*env)->CallVoidMethod(env, jobj, method);
-    (*env)->DeleteLocalRef(jsomestring); // cleanup
+    (*env)->DeleteLocalRef(jsomestring); // late cleanup
     (*env)->DeleteLocalRef(jobj);
     
 
 you can now write
 
     try {
-        TypedJNIClass psclass = tenv.find_class("SomeClass").
+       tenv.find_class("SomeClass").
             GetConstructor<jlong,jstring>()(
-                somelong,  // implicit conversion where possible
-                *tenv.make_jstring(somestring) // explicit conversion with automated clean-up
+                some_number, // implicit conversion where possible
+                tenv.make_jstring(some_string) // explicit conversion with automated clean-up
             ).
             GetMethod<void()>("someMethod")();
     } catch (std::exception & e) {
