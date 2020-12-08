@@ -199,6 +199,14 @@ class TypedJNIConstructor
             return TypedJNIObject(env, cls, env->NewObject(cls, mid, args...));
         };
     }
+    static std::function<TypedJNIObject(Args...)> get(JNIEnv *env, const jclass cls, const std::string & signature) {
+        // TODO: assert return type is V in user-defined signature
+        // TODO: prefer a vector of fully-qualified-class specifiers to enforce types where possible?
+        const jmethodID mid = TypedJNI::GetMethodID(env, cls, "<init>", signature);
+        return [env, cls, mid](Args... args) -> TypedJNIObject {
+            return TypedJNIObject(env, cls, env->NewObject(cls, mid, args...));
+        };
+    }
 };
 
 /**
@@ -232,6 +240,10 @@ class TypedJNIClass {
     template<typename... Args>
     std::function<TypedJNIObject(Args...)> GetConstructor() {
         return TypedJNIConstructor<Args...>::get(env, cls);
+    }
+    template<typename... Args>
+    std::function<TypedJNIObject(Args...)> GetConstructor(const std::string & signature) {
+        return TypedJNIConstructor<Args...>::get(env, cls, signature);
     }
 };
 
