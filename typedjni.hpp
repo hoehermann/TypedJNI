@@ -38,6 +38,7 @@ template <> std::string GetTypeString<void>();
 template <> std::string GetTypeString<jboolean>();
 template <> std::string GetTypeString<jint>();
 template <> std::string GetTypeString<jlong>();
+template <> std::string GetTypeString<jfloat>();
 template <> std::string GetTypeString<jstring>();
 template<typename T, typename... Args>
 typename std::enable_if<sizeof...(Args) != 0, std::string>::type
@@ -129,6 +130,17 @@ class TypedJNIMethod<jint(Args...)>
         const jmethodID mid =  TypedJNI::GetMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jint>());
         return [env, obj, mid](Args... args)-> jint {
             return env->CallIntMethod(obj, mid, args...);
+        };
+    }
+};
+template<typename ...Args> 
+class TypedJNIMethod<jfloat(Args...)>
+{
+    public:
+    static std::function<jfloat(Args...)> get(JNIEnv *env, const jclass cls, const jobject obj, const std::string name) {
+        const jmethodID mid =  TypedJNI::GetMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jfloat>());
+        return [env, obj, mid](Args... args)-> jfloat {
+            return env->CallFloatMethod(obj, mid, args...);
         };
     }
 };

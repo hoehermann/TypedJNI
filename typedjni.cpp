@@ -6,6 +6,7 @@ template <> std::string TypedJNI::GetTypeString<void>(){return "V";};
 template <> std::string TypedJNI::GetTypeString<jboolean>(){return "Z";};
 template <> std::string TypedJNI::GetTypeString<jint>(){return "I";};
 template <> std::string TypedJNI::GetTypeString<jlong>(){return "J";};
+template <> std::string TypedJNI::GetTypeString<jfloat>(){return "F";};
 template <> std::string TypedJNI::GetTypeString<jstring>(){return "Ljava/lang/String;";};
 
 jmethodID TypedJNI::GetStaticMethodID(JNIEnv *env, const jclass cls, const std::string name, const std::string & signature) {
