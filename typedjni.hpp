@@ -192,7 +192,9 @@ class TypedJNIConstructor
 /**
  * Special case of TypedJNIObject for convenient string conversion.
  * 
- * Uses NewStringUTF (expects Java modified Unicode, see https://stackoverflow.com/questions/7921016).
+ * Expects a byte-string of UTF-8 characters.
+ * 
+ * Copies the string at least once.
  */
 class TypedJNIString {
     private:

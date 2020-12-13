@@ -1,3 +1,7 @@
+#include <locale> // for std::wstring_convert needed in TypedJNIString
+#include <codecvt> // for std::codecvt needed in TypedJNIString
+#include <limits> // for range checking needed in TypedJNIString
+
 #include "typedjni.hpp"
 
 TypedJNIError::TypedJNIError(const std::string& what_arg) : std::runtime_error(what_arg) {};
@@ -30,9 +34,15 @@ TypedJNIObject::TypedJNIObject(JNIEnv *env, jclass cls, jobject obj) :
     obj(std::shared_ptr<_jobject>(obj, [env](jobject o){env->DeleteLocalRef(o);})) {};
 
 TypedJNIString::TypedJNIString(JNIEnv *env, const std::string & str) {
-    jstring jstr = env->NewStringUTF(str.c_str());
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> convert; 
+    std::u16string u16string = convert.from_bytes(str);
+    if (u16string.size() > static_cast<size_t>(std::numeric_limits<jint>::max())) {
+        throw TypedJNIError("Converted string length "+std::to_string(u16string.size())+" exceeds maximum "+std::to_string(std::numeric_limits<jint>::max())+".");
+    }
+    static_assert(sizeof(jchar) == sizeof(char16_t), "jchar is not as long as char16_t");
+    jstring jstr = env->NewString(reinterpret_cast<const jchar*>(u16string.c_str()), static_cast<jint>(u16string.size()));
     if (jstr == NULL) {
-        throw TypedJNIError("NewStringUTF failed for string '"+str+"'.");
+        throw TypedJNIError("NewString failed for UTF-8 string '"+str+"'.");
     }
     jstrptr = std::shared_ptr<_jstring>(jstr, [env](jstring s){env->DeleteLocalRef(s);});
 }
