@@ -195,13 +195,18 @@ class TypedJNIConstructor
  * Expects a byte-string of UTF-8 characters.
  * 
  * Copies the string at least once.
+ * 
+ * Automatically deletes local reference to Java String object when C++ instance goes out of scope. 
+ * Use make_persistent() to change this behaviour.
  */
 class TypedJNIString {
     private:
     std::shared_ptr<_jstring> jstrptr = nullptr;
+    bool persistent = false;
     public:
     TypedJNIString(JNIEnv *env, const std::string & str);
     operator jstring() const;
+    jstring make_persistent(bool persistent = true);
 };
 
 /**

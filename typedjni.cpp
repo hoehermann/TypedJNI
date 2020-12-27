@@ -44,10 +44,19 @@ TypedJNIString::TypedJNIString(JNIEnv *env, const std::string & str) {
     if (jstr == NULL) {
         throw TypedJNIError("NewString failed for UTF-8 string '"+str+"'.");
     }
-    jstrptr = std::shared_ptr<_jstring>(jstr, [env](jstring s){env->DeleteLocalRef(s);});
+    jstrptr = std::shared_ptr<_jstring>(jstr, [this, env](jstring s){ 
+        if (!persistent) { 
+            env->DeleteLocalRef(s);
+        }
+    });
 }
 
 TypedJNIString::operator jstring() const {
+    return jstrptr.get();
+}
+
+jstring TypedJNIString::make_persistent(bool persistent) {
+    this->persistent = persistent;
     return jstrptr.get();
 }
 
