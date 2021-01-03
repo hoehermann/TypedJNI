@@ -38,6 +38,7 @@ template <> std::string GetTypeString<void>();
 template <> std::string GetTypeString<jboolean>();
 template <> std::string GetTypeString<jint>();
 template <> std::string GetTypeString<jlong>();
+template <> std::string GetTypeString<jobject>();
 template <> std::string GetTypeString<jstring>();
 template <> std::string GetTypeString<jbyteArray>();
 template<typename T, typename... Args>
