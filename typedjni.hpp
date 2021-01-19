@@ -39,6 +39,7 @@ template <> std::string GetTypeString<jboolean>();
 template <> std::string GetTypeString<jint>();
 template <> std::string GetTypeString<jlong>();
 template <> std::string GetTypeString<jstring>();
+template <> std::string GetTypeString<jbyteArray>();
 template<typename T, typename... Args>
 typename std::enable_if<sizeof...(Args) != 0, std::string>::type
 GetTypeString() {

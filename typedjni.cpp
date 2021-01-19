@@ -11,6 +11,7 @@ template <> std::string TypedJNI::GetTypeString<jboolean>(){return "Z";};
 template <> std::string TypedJNI::GetTypeString<jint>(){return "I";};
 template <> std::string TypedJNI::GetTypeString<jlong>(){return "J";};
 template <> std::string TypedJNI::GetTypeString<jstring>(){return "Ljava/lang/String;";};
+template <> std::string TypedJNI::GetTypeString<jbyteArray>(){return "[B";};
 
 jmethodID TypedJNI::GetStaticMethodID(JNIEnv *env, const jclass cls, const std::string name, const std::string & signature) {
     jmethodID mid = env->GetStaticMethodID(cls, name.c_str(), signature.c_str());
