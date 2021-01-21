@@ -111,50 +111,6 @@ class TypedJNIStaticMethod<jint(Args...)>
  */
 template<typename T> 
 class TypedJNIMethod;
-template<typename ...Args> 
-class TypedJNIMethod<void(Args...)>
-{
-    public:
-    static std::function<void(Args...)> get(JNIEnv *env, const jclass cls, const jobject obj, const std::string & name) {
-        jmethodID mid = TypedJNI::GetMethodID(env, cls, name, "("+TypedJNI::GetTypeString<Args...>()+")"+TypedJNI::GetTypeString<void>());
-        return [env, obj, mid](Args... args) {
-            env->CallVoidMethod(obj, mid, args...);
-        };
-    }
-};
-template<typename ...Args> 
-class TypedJNIMethod<jint(Args...)>
-{
-    public:
-    static std::function<jint(Args...)> get(JNIEnv *env, const jclass cls, const jobject obj, const std::string name) {
-        const jmethodID mid =  TypedJNI::GetMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jint>());
-        return [env, obj, mid](Args... args)-> jint {
-            return env->CallIntMethod(obj, mid, args...);
-        };
-    }
-};
-template<typename ...Args> 
-class TypedJNIMethod<jobject(Args...)>
-{
-    public:
-    static std::function<jobject(Args...)> get(JNIEnv *env, const jclass cls, const jobject obj, const std::string name) {
-        const jmethodID mid =  TypedJNI::GetMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jobject>());
-        return [env, obj, mid](Args... args)-> jobject {
-            return env->CallObjectMethod(obj, mid, args...);
-        };
-    }
-};
-template<typename ...Args> 
-class TypedJNIMethod<jstring(Args...)>
-{
-    public:
-    static std::function<jstring(Args...)> get(JNIEnv *env, const jclass cls, const jobject obj, const std::string name) {
-        const jmethodID mid =  TypedJNI::GetMethodID(env, cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jstring>());
-        return [env, obj, mid](Args... args)-> jstring {
-            return static_cast<jstring>(env->CallObjectMethod(obj, mid, args...));
-        };
-    }
-};
 
 /**
  * Class for a proxy object referencing a Java object.
@@ -162,15 +118,59 @@ class TypedJNIMethod<jstring(Args...)>
  * The local reference to the Java object is deleted when the last copy of the proxy object is destroyed.
  */
 class TypedJNIObject {
-    private:
-    JNIEnv *env = nullptr;
-    jclass cls = nullptr;
-    std::shared_ptr<_jobject> obj = nullptr;
     public:
+    JNIEnv *env = nullptr;
+    const jclass cls = nullptr;
+    const std::shared_ptr<_jobject> obj = nullptr;
     TypedJNIObject(JNIEnv *env, jclass cls, jobject obj);
     template<typename... Args>
     std::function<Args...> GetMethod(const std::string name) {
-        return TypedJNIMethod<Args...>::get(env, cls, obj.get(), name);
+        return TypedJNIMethod<Args...>::get(*this, name);
+    }
+};
+
+template<typename ...Args> 
+class TypedJNIMethod<void(Args...)>
+{
+    public:
+    static std::function<void(Args...)> get(const TypedJNIObject & obj, const std::string & name) {
+        jmethodID mid = TypedJNI::GetMethodID(obj.env, obj.cls, name, "("+TypedJNI::GetTypeString<Args...>()+")"+TypedJNI::GetTypeString<void>());
+        return [obj, mid](Args... args) {
+            obj.env->CallVoidMethod(obj.obj.get(), mid, args...);
+        };
+    }
+};
+template<typename ...Args> 
+class TypedJNIMethod<jint(Args...)>
+{
+    public:
+    static std::function<jint(Args...)> get(const TypedJNIObject & obj, const std::string name) {
+        const jmethodID mid = TypedJNI::GetMethodID(obj.env, obj.cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jint>());
+        return [obj, mid](Args... args)-> jint {
+            return obj.env->CallIntMethod(obj.obj.get(), mid, args...);
+        };
+    }
+};
+template<typename ...Args> 
+class TypedJNIMethod<jobject(Args...)>
+{
+    public:
+    static std::function<jobject(Args...)> get(const TypedJNIObject & obj, const std::string name) {
+        const jmethodID mid = TypedJNI::GetMethodID(obj.env, obj.cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jobject>());
+        return [obj, mid](Args... args)-> jobject {
+            return obj.env->CallObjectMethod(obj.obj.get(), mid, args...);
+        };
+    }
+};
+template<typename ...Args> 
+class TypedJNIMethod<jstring(Args...)>
+{
+    public:
+    static std::function<jstring(Args...)> get(const TypedJNIObject & obj, const std::string name) {
+        const jmethodID mid = TypedJNI::GetMethodID(obj.env, obj.cls, name, "("+ TypedJNI::GetTypeString<Args...>()+")"+ TypedJNI::GetTypeString<jstring>());
+        return [obj, mid](Args... args)-> jstring {
+            return static_cast<jstring>(obj.env->CallObjectMethod(obj.obj.get(), mid, args...));
+        };
     }
 };
 
